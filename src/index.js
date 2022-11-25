@@ -56,12 +56,22 @@ function MoveList(props) {
   return <ol>{moves}</ol>;
 }
 
+function CurrentTurnIndicator(props) {
+  return <div>Current Turn: {props.turn}</div>;
+}
+
 function Game() {
   const [history, setHistory] = useState([{ squares: Array(9).fill(null) }]);
   const [xIsNext, setXIsNext] = useState(true);
   const [stepNumber, setStepNumber] = useState(0);
+  const [turnNumber, setTurnNumber] = useState(stepNumber + 1);
   const current = history[stepNumber];
   const winner = calculateWinner(current.squares);
+
+  useEffect(() => {
+    setTurnNumber(stepNumber + 1);
+    console.log(`Current turn ${stepNumber}`);
+  }, [stepNumber]);
 
   function jumpTo(step) {
     setStepNumber(step);
@@ -95,6 +105,7 @@ function Game() {
       </div>
       <div className="game-info">
         <div>{status}</div>
+        <CurrentTurnIndicator turn={turnNumber} />
         <MoveList history={history} jumpTo={jumpTo} />
       </div>
     </div>
