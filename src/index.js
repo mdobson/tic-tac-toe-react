@@ -60,13 +60,23 @@ function CurrentTurnIndicator(props) {
   return <div>Current Turn: {props.turn}</div>;
 }
 
+function StatusIndicator(props) {
+  let status;
+  if (props.winner) {
+    status = `Winner ${props.winner}`;
+  } else {
+    status = `Next player: ${props.xIsNext ? "X" : "Y"}`;
+  }
+
+  return <dev>{status}</dev>;
+}
+
 function Game() {
   const [history, setHistory] = useState([{ squares: Array(9).fill(null) }]);
   const [xIsNext, setXIsNext] = useState(true);
   const [stepNumber, setStepNumber] = useState(0);
   const [turnNumber, setTurnNumber] = useState(stepNumber + 1);
   const current = history[stepNumber];
-  const winner = calculateWinner(current.squares);
 
   useEffect(() => {
     setTurnNumber(stepNumber + 1);
@@ -78,24 +88,32 @@ function Game() {
     setXIsNext(step % 2 === 0);
   }
 
-  let status;
-  if (winner) {
-    status = `Winner ${winner}`;
-  } else {
-    status = `Next player: ${xIsNext ? "X" : "Y"}`;
-  }
-
-  function handleClick(i) {
+  //Get a copy of the current game state
+  function getCurrentState() {
     const traversableHistory = history.slice(0, stepNumber + 1);
     const current = traversableHistory[traversableHistory.length - 1];
     const squares = current.squares.slice();
-    if (calculateWinner(squares) || squares[i]) {
-      return;
-    }
+    return squares;
+  }
+
+  //Update the current game state with latest move
+  function updateGameState(squares, i) {
     squares[i] = xIsNext ? "X" : "Y";
     setHistory(history.concat([{ squares: squares }]));
     setXIsNext(!xIsNext);
     setStepNumber(history.length);
+  }
+
+  function checkIfMovePossible(squares, i) {
+    return calculateWinner(squares) || squares[i];
+  }
+
+  function handleClick(i) {
+    const squares = getCurrentState();
+    if (checkIfMovePossible) {
+      return;
+    }
+    updateGameState(squares, i);
   }
 
   return (
@@ -104,7 +122,10 @@ function Game() {
         <Board squares={current.squares} onClick={(i) => handleClick(i)} />
       </div>
       <div className="game-info">
-        <div>{status}</div>
+        <StatusIndicator
+          winner={calculateWinner(current.squares)}
+          xIsNext={xIsNext}
+        />
         <CurrentTurnIndicator turn={turnNumber} />
         <MoveList history={history} jumpTo={jumpTo} />
       </div>
