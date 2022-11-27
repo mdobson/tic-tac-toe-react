@@ -8,6 +8,10 @@ ul {
   padding-left: 30px;
 }
 
+li {
+  padding-top: 3px;
+}
+
 .board-row:after {
   clear: both;
   content: "";
@@ -41,11 +45,41 @@ ul {
   background: #ddd;
 }
 
+.score {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.individual-score {
+  padding: 8px;
+}
+
+.title {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
 .game {
   display: flex;
   flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-status {
+  padding: 8px;
+}
+
+.game-status-item {
+  padding: 4px;
 }
 
 .game-info {
   margin-left: 20px;
+  display: flex;
+  flex-direction: row;
 }

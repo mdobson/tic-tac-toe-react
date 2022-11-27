@@ -1,7 +1,21 @@
 const http = require("http");
 
+const winCounter = {
+  X: 0,
+  Y: 0,
+};
+
 http
   .createServer((req, res) => {
-    res.writeHead(200, JSON.stringify({ hello: "world" }));
+    if (req.method === "POST") {
+      const winner = req.url.split("/")[1];
+      if (winner !== "X" && winner !== "Y") {
+        return res.writeHead(404).end();
+      }
+      winCounter[winner]++;
+    }
+    return res
+      .writeHead(200, { "Content-Type": "application/json" })
+      .end(JSON.stringify(winCounter));
   })
   .listen(8080);

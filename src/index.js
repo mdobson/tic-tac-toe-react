@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom/client";
+import axios from "axios";
+
 import "./index.css";
+
+const url = "http://localhost:8080";
 
 function Square(props) {
   return (
@@ -52,12 +56,17 @@ function MoveList(props) {
       </li>
     );
   });
-  console.log(moves);
-  return <ol>{moves}</ol>;
+
+  return (
+    <div className="moves">
+      <div>Move History:</div>
+      <ol>{moves}</ol>
+    </div>
+  );
 }
 
 function CurrentTurnIndicator(props) {
-  return <div>Current Turn: {props.turn}</div>;
+  return <div className="game-status-item">Current Turn: {props.turn}</div>;
 }
 
 function StatusIndicator(props) {
@@ -68,21 +77,57 @@ function StatusIndicator(props) {
     status = `Next player: ${props.xIsNext ? "X" : "Y"}`;
   }
 
-  return <dev>{status}</dev>;
+  return (
+    <div className="game-status-item">
+      <div>{status}</div>
+      {props.winner && <ResetGameIndicator reset={props.reset} />}
+    </div>
+  );
+}
+
+function ScoreTable(props) {
+  return (
+    <div className="game-status-item">
+      <div>Score:</div>
+      <div className="score">
+        <div className="individual-score">
+          <div>{props.playerOne}</div>
+          <div>{props.playerOneScore}</div>
+        </div>
+        <div className="individual-score">
+          <div>{props.playerTwo}</div>
+          <div>{props.playerTwoScore}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ResetGameIndicator(props) {
+  return (
+    <div>
+      <button onClick={props.reset}>Reset Game</button>
+    </div>
+  );
 }
 
 function Game() {
   const [history, setHistory] = useState([{ squares: Array(9).fill(null) }]);
   const [xIsNext, setXIsNext] = useState(true);
   const [stepNumber, setStepNumber] = useState(0);
-  const [turnNumber, setTurnNumber] = useState(stepNumber + 1);
+
   const current = history[stepNumber];
 
+  //This is just a test of useEffect
   useEffect(() => {
-    setTurnNumber(stepNumber + 1);
     console.log(`Current turn ${stepNumber}`);
   }, [stepNumber]);
 
+  function reset() {
+    setHistory([{ squares: Array(9).fill(null) }]);
+    setXIsNext(true);
+    setStepNumber(0);
+  }
   function jumpTo(step) {
     setStepNumber(step);
     setXIsNext(step % 2 === 0);
@@ -110,24 +155,40 @@ function Game() {
 
   function handleClick(i) {
     const squares = getCurrentState();
-    if (checkIfMovePossible) {
+    if (checkIfMovePossible(squares, i)) {
       return;
     }
     updateGameState(squares, i);
   }
 
   return (
-    <div className="game">
-      <div className="game-board">
-        <Board squares={current.squares} onClick={(i) => handleClick(i)} />
+    <div>
+      <div className="title">
+        <h1>React Tic Tac Toe!</h1>
       </div>
-      <div className="game-info">
-        <StatusIndicator
-          winner={calculateWinner(current.squares)}
-          xIsNext={xIsNext}
-        />
-        <CurrentTurnIndicator turn={turnNumber} />
-        <MoveList history={history} jumpTo={jumpTo} />
+      <div className="game">
+        <div className="game-board">
+          <Board squares={current.squares} onClick={(i) => handleClick(i)} />
+        </div>
+        <div className="game-info">
+          <div className="game-status">
+            <ScoreTable
+              playerOne="X"
+              playerOneScore="0"
+              playerTwo="Y"
+              playerTwoScore="0"
+            />
+            <StatusIndicator
+              winner={calculateWinner(current.squares)}
+              xIsNext={xIsNext}
+              reset={reset}
+            />
+            <CurrentTurnIndicator turn={stepNumber + 1} />
+          </div>
+          <div className="game-status">
+            <MoveList history={history} jumpTo={jumpTo} />
+          </div>
+        </div>
       </div>
     </div>
   );
