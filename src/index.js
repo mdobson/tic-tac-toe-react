@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom/client";
-import axios from "axios";
 
 import "./index.css";
+import { sendWinner } from "./client";
 
 const url = "http://localhost:8080";
 
@@ -128,8 +128,21 @@ function Game() {
       sessionScore[calculatedWinner]++;
       setWinner(calculatedWinner);
       setSessionScore(sessionScore);
+      sendWinner(url, calculatedWinner)
+        .then(() => {
+          console.log(`Winner ${calculateWinner} sent to server`);
+        })
+        .catch((e) => {
+          console.log(e);
+        });
     }
   }, [history, stepNumber]);
+
+  useEffect(() => {
+    if (winner) {
+      console.log("Send winner message");
+    }
+  }, [winner]);
 
   function reset() {
     setHistory([{ squares: Array(9).fill(null) }]);
