@@ -92,11 +92,11 @@ function ScoreTable(props) {
       <div className="score flex-row flex-center">
         <div className="individual-score">
           <div>{props.playerOne}</div>
-          <div>{props.playerOneScore}</div>
+          <div>{props.scoreState.X}</div>
         </div>
         <div className="individual-score">
           <div>{props.playerTwo}</div>
-          <div>{props.playerTwoScore}</div>
+          <div>{props.scoreState.Y}</div>
         </div>
       </div>
     </div>
@@ -115,18 +115,27 @@ function Game() {
   const [history, setHistory] = useState([{ squares: Array(9).fill(null) }]);
   const [xIsNext, setXIsNext] = useState(true);
   const [stepNumber, setStepNumber] = useState(0);
+  const [sessionScore, setSessionScore] = useState({ X: 0, Y: 0 });
+  const [winner, setWinner] = useState(null);
 
   const current = history[stepNumber];
 
-  //This is just a test of useEffect
+  //Use effect to check for a winner?
   useEffect(() => {
-    console.log(`Current turn ${stepNumber}`);
-  }, [stepNumber]);
+    const currentState = getCurrentState();
+    const calculatedWinner = calculateWinner(currentState);
+    if (calculatedWinner) {
+      sessionScore[calculatedWinner]++;
+      setWinner(calculatedWinner);
+      setSessionScore(sessionScore);
+    }
+  }, [history, stepNumber]);
 
   function reset() {
     setHistory([{ squares: Array(9).fill(null) }]);
     setXIsNext(true);
     setStepNumber(0);
+    setWinner(null);
   }
   function jumpTo(step) {
     setStepNumber(step);
@@ -172,17 +181,8 @@ function Game() {
         </div>
         <div className="game-info flex-row">
           <div className="game-status">
-            <ScoreTable
-              playerOne="X"
-              playerOneScore="0"
-              playerTwo="Y"
-              playerTwoScore="0"
-            />
-            <StatusIndicator
-              winner={calculateWinner(current.squares)}
-              xIsNext={xIsNext}
-              reset={reset}
-            />
+            <ScoreTable playerOne="X" playerTwo="Y" scoreState={sessionScore} />
+            <StatusIndicator winner={winner} xIsNext={xIsNext} reset={reset} />
             <CurrentTurnIndicator turn={stepNumber + 1} />
           </div>
           <div className="game-status">
