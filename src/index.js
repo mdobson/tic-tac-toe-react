@@ -89,7 +89,7 @@ function ScoreTable(props) {
   return (
     <div className="game-status-item">
       <div>Score:</div>
-      <div className="score">
+      <div className="score flex-row flex-center">
         <div className="individual-score">
           <div>{props.playerOne}</div>
           <div>{props.playerOneScore}</div>
@@ -163,14 +163,14 @@ function Game() {
 
   return (
     <div>
-      <div className="title">
+      <div className="flex-row flex-center">
         <h1>React Tic Tac Toe!</h1>
       </div>
-      <div className="game">
+      <div className="game flex-row flex-center">
         <div className="game-board">
           <Board squares={current.squares} onClick={(i) => handleClick(i)} />
         </div>
-        <div className="game-info">
+        <div className="game-info flex-row">
           <div className="game-status">
             <ScoreTable
               playerOne="X"

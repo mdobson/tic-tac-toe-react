@@ -45,29 +45,18 @@ li {
   background: #ddd;
 }
 
-.score {
-  display: flex;
-  flex-direction: row;
+.flex-center {
   align-items: center;
   justify-content: center;
+}
+
+.flex-row {
+  display: flex;
+  flex-direction: row;
 }
 
 .individual-score {
   padding: 8px;
-}
-
-.title {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-}
-
-.game {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
 }
 
 .game-status {
@@ -80,6 +69,4 @@ li {
 
 .game-info {
   margin-left: 20px;
-  display: flex;
-  flex-direction: row;
 }
