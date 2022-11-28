@@ -1,10 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
+import cloneDeep from "lodash/cloneDeep";
 
 import "./index.css";
-import { sendWinner } from "./client";
-
-const url = "http://localhost:8080";
 
 function Square(props) {
   return (
@@ -86,17 +84,19 @@ function StatusIndicator(props) {
 }
 
 function ScoreTable(props) {
+  const players = Object.keys(props.sessionScore);
+  const sessionScore = props.sessionScore;
   return (
     <div className="game-status-item">
       <div>Score:</div>
       <div className="score flex-row flex-center">
         <div className="individual-score">
-          <div>{props.playerOne}</div>
-          <div>{props.scoreState.X}</div>
+          <div>{players[0]}</div>
+          <div>{sessionScore[players[0]]}</div>
         </div>
         <div className="individual-score">
-          <div>{props.playerTwo}</div>
-          <div>{props.scoreState.Y}</div>
+          <div>{players[1]}</div>
+          <div>{sessionScore[players[1]]}</div>
         </div>
       </div>
     </div>
@@ -114,73 +114,56 @@ function ResetGameIndicator(props) {
 function Game() {
   const [history, setHistory] = useState([{ squares: Array(9).fill(null) }]);
   const [xIsNext, setXIsNext] = useState(true);
-  const [stepNumber, setStepNumber] = useState(0);
   const [sessionScore, setSessionScore] = useState({ X: 0, Y: 0 });
-  const [winner, setWinner] = useState(null);
 
-  const current = history[stepNumber];
-
-  const memoizedImmutableHistoryCall = useCallback(() => {
-    const historyToUse = history;
-    const traversableHistory = historyToUse.slice(0, stepNumber + 1);
-    const current = traversableHistory[traversableHistory.length - 1];
-    const squares = current.squares.slice();
-    return squares;
-  }, [history, stepNumber]);
-
-  //Use effect to check for a winner?
-  useEffect(() => {
-    const currentState = memoizedImmutableHistoryCall();
-    const calculatedWinner = calculateWinner(currentState);
-    if (calculatedWinner) {
-      sessionScore[calculatedWinner]++;
-      setWinner(calculatedWinner);
-      setSessionScore(sessionScore);
-      sendWinner(url, calculatedWinner)
-        .then(() => {
-          console.log(`Winner ${calculateWinner} sent to server`);
-        })
-        .catch((e) => {
-          console.log(e);
-        });
-    }
-  }, [history, sessionScore, memoizedImmutableHistoryCall]);
-
-  useEffect(() => {
-    if (winner) {
-      console.log("Send winner message");
-    }
-  }, [winner]);
+  const current = history[history.length - 1];
+  const currentWinner = calculateWinner(current.squares);
 
   function reset() {
     setHistory([{ squares: Array(9).fill(null) }]);
     setXIsNext(true);
-    setStepNumber(0);
-    setWinner(null);
   }
+
   function jumpTo(step) {
-    setStepNumber(step);
+    if (currentWinner) {
+      updateSessionScore(currentWinner, -1);
+    }
+
+    const newHistory = history.slice(0, step + 1);
+    setHistory(newHistory);
     setXIsNext(step % 2 === 0);
+  }
+
+  function updateSessionScore(winner, inc) {
+    const clonedScore = cloneDeep(sessionScore);
+    const prevScore = clonedScore[winner];
+    clonedScore[winner] = prevScore + inc;
+    setSessionScore(clonedScore);
   }
 
   //Update the current game state with latest move
   function updateGameState(squares, i) {
-    squares[i] = xIsNext ? "X" : "Y";
-    setHistory(history.concat([{ squares: squares }]));
+    const clonedSquares = squares.slice();
+    clonedSquares[i] = xIsNext ? "X" : "Y";
+    setHistory(history.concat([{ squares: clonedSquares }]));
     setXIsNext(!xIsNext);
-    setStepNumber(history.length);
+
+    const winner = calculateWinner(clonedSquares);
+    if (winner) {
+      updateSessionScore(winner, 1);
+    }
   }
 
-  function checkIfMovePossible(squares, i) {
-    return calculateWinner(squares) || squares[i];
+  function preventMove(squares, i) {
+    return currentWinner || squares[i];
   }
 
   function handleClick(i) {
-    const squares = memoizedImmutableHistoryCall(history);
-    if (checkIfMovePossible(squares, i)) {
+    if (preventMove(current.squares, i)) {
       return;
     }
-    updateGameState(squares, i);
+
+    updateGameState(current.squares, i);
   }
 
   return (
@@ -194,9 +177,13 @@ function Game() {
         </div>
         <div className="game-info flex-row">
           <div className="game-status">
-            <ScoreTable playerOne="X" playerTwo="Y" scoreState={sessionScore} />
-            <StatusIndicator winner={winner} xIsNext={xIsNext} reset={reset} />
-            <CurrentTurnIndicator turn={stepNumber + 1} />
+            <ScoreTable sessionScore={sessionScore} />
+            <StatusIndicator
+              winner={currentWinner}
+              xIsNext={xIsNext}
+              reset={reset}
+            />
+            <CurrentTurnIndicator turn={history.length} />
           </div>
           <div className="game-status">
             <MoveList history={history} jumpTo={jumpTo} />
