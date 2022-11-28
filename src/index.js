@@ -148,10 +148,10 @@ function Game() {
     setHistory(history.concat([{ squares: clonedSquares }]));
     setXIsNext(!xIsNext);
 
-    const winner = calculateWinner(clonedSquares);
-    if (winner) {
-      updateSessionScore(winner, 1);
-    }
+    // const winner = calculateWinner(clonedSquares);
+    // if (winner) {
+    //   updateSessionScore(winner, 1);
+    // }
   }
 
   function preventMove(squares, i) {
