@@ -4,6 +4,9 @@ import cloneDeep from "lodash/cloneDeep";
 
 import "./index.css";
 
+import { ScoreKeeper } from "./score_keeper";
+import { GameBoard } from "./game_board";
+
 function Square(props) {
   return (
     <button className="square" onClick={props.onClick}>
@@ -46,7 +49,7 @@ class Board extends React.Component {
 }
 
 function MoveList(props) {
-  const moves = props.history.map((step, move) => {
+  const moves = props.history.history.map((step, move) => {
     const desc = move ? `Go to move # ${move}` : `Go to start`;
     return (
       <li key={move}>
@@ -84,8 +87,8 @@ function StatusIndicator(props) {
 }
 
 function ScoreTable(props) {
-  const players = Object.keys(props.sessionScore);
-  const sessionScore = props.sessionScore;
+  const sessionScore = props.sessionScore.scores;
+  const players = Object.keys(sessionScore);
   return (
     <div className="game-status-item">
       <div>Score:</div>
@@ -112,15 +115,17 @@ function ResetGameIndicator(props) {
 }
 
 function Game() {
-  const [history, setHistory] = useState([{ squares: Array(9).fill(null) }]);
+  const [history, setHistory] = useState(new GameBoard().fill());
   const [xIsNext, setXIsNext] = useState(true);
-  const [sessionScore, setSessionScore] = useState({ X: 0, Y: 0 });
+  const [sessionScore, setSessionScore] = useState(
+    new ScoreKeeper(["X", "Y"], 0)
+  );
 
-  const current = history[history.length - 1];
-  const currentWinner = calculateWinner(current.squares);
+  const current = history.current();
+  const currentWinner = history.checkWinner();
 
   function reset() {
-    setHistory([{ squares: Array(9).fill(null) }]);
+    setHistory(history.fill());
     setXIsNext(true);
   }
 
@@ -129,29 +134,30 @@ function Game() {
       updateSessionScore(currentWinner, -1);
     }
 
-    const newHistory = history.slice(0, step + 1);
+    const clonedHistory = cloneDeep(history);
+    const newHistory = clonedHistory.getStep(step);
     setHistory(newHistory);
     setXIsNext(step % 2 === 0);
   }
 
   function updateSessionScore(winner, inc) {
     const clonedScore = cloneDeep(sessionScore);
-    const prevScore = clonedScore[winner];
-    clonedScore[winner] = prevScore + inc;
+    clonedScore.updateScore(winner, inc);
     setSessionScore(clonedScore);
   }
 
   //Update the current game state with latest move
   function updateGameState(squares, i) {
-    const clonedSquares = squares.slice();
-    clonedSquares[i] = xIsNext ? "X" : "Y";
-    setHistory(history.concat([{ squares: clonedSquares }]));
+    const player = xIsNext ? "X" : "Y";
+    const clonedHistory = cloneDeep(history);
+    clonedHistory.setPosition(player, i);
+    setHistory(clonedHistory);
     setXIsNext(!xIsNext);
 
-    // const winner = calculateWinner(clonedSquares);
-    // if (winner) {
-    //   updateSessionScore(winner, 1);
-    // }
+    const winner = clonedHistory.checkWinner();
+    if (winner) {
+      updateSessionScore(winner, 1);
+    }
   }
 
   function preventMove(squares, i) {
@@ -192,28 +198,6 @@ function Game() {
       </div>
     </div>
   );
-}
-
-function calculateWinner(squares) {
-  const lines = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6],
-  ];
-
-  for (let i = 0; i < lines.length; i++) {
-    const [a, b, c] = lines[i];
-    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a];
-    }
-  }
-
-  return null;
 }
 
 // ========================================
