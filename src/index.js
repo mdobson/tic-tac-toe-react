@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom/client";
 
 import "./index.css";
@@ -120,9 +120,17 @@ function Game() {
 
   const current = history[stepNumber];
 
+  const memoizedImmutableHistoryCall = useCallback(() => {
+    const historyToUse = history;
+    const traversableHistory = historyToUse.slice(0, stepNumber + 1);
+    const current = traversableHistory[traversableHistory.length - 1];
+    const squares = current.squares.slice();
+    return squares;
+  }, [history, stepNumber]);
+
   //Use effect to check for a winner?
   useEffect(() => {
-    const currentState = getCurrentState();
+    const currentState = memoizedImmutableHistoryCall();
     const calculatedWinner = calculateWinner(currentState);
     if (calculatedWinner) {
       sessionScore[calculatedWinner]++;
@@ -136,7 +144,7 @@ function Game() {
           console.log(e);
         });
     }
-  }, [history, stepNumber]);
+  }, [history, sessionScore, memoizedImmutableHistoryCall]);
 
   useEffect(() => {
     if (winner) {
@@ -155,14 +163,6 @@ function Game() {
     setXIsNext(step % 2 === 0);
   }
 
-  //Get a copy of the current game state
-  function getCurrentState() {
-    const traversableHistory = history.slice(0, stepNumber + 1);
-    const current = traversableHistory[traversableHistory.length - 1];
-    const squares = current.squares.slice();
-    return squares;
-  }
-
   //Update the current game state with latest move
   function updateGameState(squares, i) {
     squares[i] = xIsNext ? "X" : "Y";
@@ -176,7 +176,7 @@ function Game() {
   }
 
   function handleClick(i) {
-    const squares = getCurrentState();
+    const squares = memoizedImmutableHistoryCall(history);
     if (checkIfMovePossible(squares, i)) {
       return;
     }
